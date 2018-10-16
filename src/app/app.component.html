@@ -1,0 +1,15 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div class="colorbox" [ngStyle]="{'background-color': answer.hex}"></div>
+
+<div class="flex">
+  <div class="flex4" *ngFor="let color of colors">
+    <button
+      (click)="checkColor(color)"
+      [ngStyle]="{'background-color': color.btnColor, 'color': color.textColor}"
+      [disabled] = "color.isSelected || correct"
+      >
+      {{color.name}}
+      <fa-icon *ngIf = "color.isSelected" [icon] = "['fas', color.icon]"></fa-icon>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+/* You can add global styles to this file, and also import other style files */
+  .colorbox {
+    height: 200px;
+    width: 100%;
+}
+
+div{
+  font-size: 20px;
+}
+
+div.flex{
+  display: flex;
+}
+
+div.flex4{
+  flex: 4;
+}
+
+div.flex1{
+  flex: 1;
+}
+
+button{
+  width: 100%;
+  font-size: 1.5em;
+  padding: 5px;
+  border-radius: 5px;
+  --switch: calc((var(--light) - var(--threshold)) * -100%);
+  color: hsl(0, 0%, var(--switch));
+}
