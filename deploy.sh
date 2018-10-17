@@ -98,42 +98,47 @@ selectNodeVersion () {
 # Deployment
 # ----------
 
-echo Handling node.js deployment.
+if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
 
-:: 1. Select node version
-call :SelectNodeVersion
- 
-:: 2. Install npm packages
-IF EXIST "%DEPLOYMENT_SOURCE%\package.json" (
-  pushd "%DEPLOYMENT_SOURCE%"
-  call :ExecuteCmd !NPM_CMD! install
-  IF !ERRORLEVEL! NEQ 0 goto error
-  popd
-)
- 
-:: 3. Angular Prod Build
-IF EXIST "%DEPLOYMENT_SOURCE%/.angular-cli.json" (
-echo Building App in %DEPLOYMENT_SOURCE%…
-pushd "%DEPLOYMENT_SOURCE%"
-call :ExecuteCmd !NPM_CMD! run build
-IF !ERRORLEVEL! NEQ 0 goto error
-popd
-)
- 
-:: 4. Copy Web.config
-IF EXIST "%DEPLOYMENT_SOURCE%\web.config" (
-  pushd "%DEPLOYMENT_SOURCE%"
- :: the next line is optional to fix 404 error see section #8
-  call :ExecuteCmd cp web.config dist\
-  IF !ERRORLEVEL! NEQ 0 goto error
-  popd
-)
- 
-:: 5. KuduSync
-IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
-  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%/dist" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
-  IF !ERRORLEVEL! NEQ 0 goto error
-)
+  cd "$DEPLOYMENT_SOURCE"
+
+  eval $NPM_CMD install
+
+  exitWithMessageOnError "npm failed"
+
+  cd - > /dev/null
+
+fi
+
+
+
+if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
+
+  cd "$DEPLOYMENT_SOURCE"
+
+  eval ./node_modules/@angular/cli/bin/ng build eval $NPM_CMD install
+
+  exitWithMessageOnError "npm build failed"
+
+  cd - > /dev/null
+
+fi
+
+
+
+if [ "$IN_PLACE_DEPLOYMENT" -ne "1" ]; then
+
+  "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE/dist/" -t "$DEPLOYMENT_TARGET" \
+
+                -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" \
+
+                -i "e2e;node_modules;src;.angular-cli.json;.deployment;.gitignore;az.ps1;deploy.sh; \                              package.json;README.md;tsconfig.json;"
+
+  exitWithMessageOnError "Kudu Sync failed"
+
+  cd - > /dev/null
+
+fi
 
 ##################################################################################################################################
 echo "Finished successfully."
