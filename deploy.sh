@@ -1,52 +1,144 @@
-##################################################################################################################################
-# Deployment
-# ----------
+@if "%SCM_TRACE_LEVEL%" NEQ "4" @echo off
 
-echo "$DEPLOYMENT_SOURCE"
-echo "$NPM_CMD"
-echo "$DEPLOYMENT_TARGET"
-echo "starting deploy script"
+:: ----------------------
+:: KUDU Deployment Script
+:: Version: 1.0.15
+:: ----------------------
 
-if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
+:: Prerequisites
+:: -------------
 
-  cd "$DEPLOYMENT_SOURCE"
+:: Verify node.js installed
+where node 2>nul >nul
+IF %ERRORLEVEL% NEQ 0 (
+  echo Missing node.js executable, please install node.js, if already installed make sure it can be reached from current environment.
+  goto error
+)
 
-  eval $NPM_CMD install
+:: Setup
+:: -----
 
-  exitWithMessageOnError "npm failed"
+setlocal enabledelayedexpansion
 
-  cd - > /dev/null
+SET ARTIFACTS=%~dp0%..\artifacts
 
-fi
+IF NOT DEFINED DEPLOYMENT_SOURCE (
+  SET DEPLOYMENT_SOURCE=%~dp0%.
+)
 
+IF NOT DEFINED DEPLOYMENT_TARGET (
+  SET DEPLOYMENT_TARGET=%ARTIFACTS%\wwwroot
+)
 
-if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
+IF NOT DEFINED NEXT_MANIFEST_PATH (
+  SET NEXT_MANIFEST_PATH=%ARTIFACTS%\manifest
 
-  cd "$DEPLOYMENT_SOURCE"
+  IF NOT DEFINED PREVIOUS_MANIFEST_PATH (
+    SET PREVIOUS_MANIFEST_PATH=%ARTIFACTS%\manifest
+  )
+)
 
-  eval ./node_modules/@angular/cli/bin/ng build eval $NPM_CMD install
+IF NOT DEFINED KUDU_SYNC_CMD (
+  :: Install kudu sync
+  echo Installing Kudu Sync
+  call npm install kudusync -g --silent
+  IF !ERRORLEVEL! NEQ 0 goto error
 
-  exitWithMessageOnError "npm build failed"
+  :: Locally just running "kuduSync" would also work
+  SET KUDU_SYNC_CMD=%appdata%\npm\kuduSync.cmd
+)
+goto Deployment
 
-  cd - > /dev/null
+:: Utility Functions
+:: -----------------
 
-fi
+:SelectNodeVersion
 
+IF DEFINED KUDU_SELECT_NODE_VERSION_CMD (
+  :: The following are done only on Windows Azure Websites environment
+  call %KUDU_SELECT_NODE_VERSION_CMD% "%DEPLOYMENT_SOURCE%" "%DEPLOYMENT_TARGET%" "%DEPLOYMENT_TEMP%"
+  IF !ERRORLEVEL! NEQ 0 goto error
 
-if [ "$IN_PLACE_DEPLOYMENT" -ne "1" ]; then
+  IF EXIST "%DEPLOYMENT_TEMP%\__nodeVersion.tmp" (
+    SET /p NODE_EXE=<"%DEPLOYMENT_TEMP%\__nodeVersion.tmp"
+    IF !ERRORLEVEL! NEQ 0 goto error
+  )
 
+  IF EXIST "%DEPLOYMENT_TEMP%\__npmVersion.tmp" (
+    SET /p NPM_JS_PATH=<"%DEPLOYMENT_TEMP%\__npmVersion.tmp"
+    IF !ERRORLEVEL! NEQ 0 goto error
+  )
 
-  "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE/dist/" -t "$DEPLOYMENT_TARGET" \
+  IF NOT DEFINED NODE_EXE (
+    SET NODE_EXE=node
+  )
 
-                -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" \
+  SET NPM_CMD="!NODE_EXE!" "!NPM_JS_PATH!"
+) ELSE (
+  SET NPM_CMD=npm
+  SET NODE_EXE=node
+)
 
-                -i "e2e;node_modules;src;.angular-cli.json;.deployment;.gitignore;az.ps1;deploy.sh;package.json;README.md;tsconfig.json;"
+goto :EOF
 
-  exitWithMessageOnError "Kudu Sync failed"
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Deployment
+:: ----------
 
-  cd - > /dev/null
+:Deployment
+echo Handling node.js deployment.
 
-fi
+:: 1. KuduSync
+IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
+  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
+  IF !ERRORLEVEL! NEQ 0 goto error
+)
 
-##################################################################################################################################
-echo "Finished successfully."
+:: 2. Select node version
+call :SelectNodeVersion
+
+:: 3. Install npm packages
+IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
+  pushd "%DEPLOYMENT_TARGET%"
+  call :ExecuteCmd !NPM_CMD! install
+  IF !ERRORLEVEL! NEQ 0 goto error
+  popd
+)
+
+echo Handling Angular build
+  ::4. Build ng app
+ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
+      pushd "%DEPLOYMENT_TARGET%"
+      call :ExecuteCmd "!NODE_EXE!" ./node_modules/@angular/cli/bin/ng build --prod --env=prod --aot
+      :: the next line is optional to fix 404 error see section #8
+      call :ExecuteCmd cp "%DEPLOYMENT_TARGET%"/web.config "%DEPLOYMENT_TARGET%"/dist/
+      IF !ERRORLEVEL! NEQ 0 goto error
+      popd
+    )
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+goto end
+
+:: Execute command routine that will echo out when error
+:ExecuteCmd
+setlocal
+set _CMD_=%*
+call %_CMD_%
+if "%ERRORLEVEL%" NEQ "0" echo Failed exitCode=%ERRORLEVEL%, command=%_CMD_%
+exit /b %ERRORLEVEL%
+
+:error
+endlocal
+echo An error has occurred during web site deployment.
+call :exitSetErrorLevel
+call :exitFromFunction 2>nul
+
+:exitSetErrorLevel
+exit /b 1
+
+:exitFromFunction
+()
+
+:end
+endlocal
+echo Finished successfully.
