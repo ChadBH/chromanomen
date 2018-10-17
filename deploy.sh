@@ -35,9 +35,7 @@ if [ "$IN_PLACE_DEPLOYMENT" -ne "1" ]; then
 
                 -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" \
 
-                -i "e2e;node_modules;src;.angular-cli.json;.deployment;.gitignore;az.ps1;deploy.sh; \                              package.json;README.md;tsconfig.json;"
-
-mv "$DEPLOYMENT_TARGET/web.config" "$DEPLOYMENT_TARGET/dist/web.config"
+                -i "e2e;node_modules;src;.angular-cli.json;.deployment;.gitignore;az.ps1;deploy.sh;package.json;README.md;tsconfig.json;"
 
   exitWithMessageOnError "Kudu Sync failed"
 
