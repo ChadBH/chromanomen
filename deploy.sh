@@ -2,6 +2,10 @@
 # Deployment
 # ----------
 
+echo "$DEPLOYMENT_SOURCE"
+echo "$NPM_CMD"
+echo "$DEPLOYMENT_TARGET"
+
 if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
 
   cd "$DEPLOYMENT_SOURCE"
