@@ -5,6 +5,7 @@
 echo "$DEPLOYMENT_SOURCE"
 echo "$NPM_CMD"
 echo "$DEPLOYMENT_TARGET"
+echo "starting deploy script"
 
 if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
 
