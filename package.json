@@ -1,6 +1,9 @@
 {
   "name": "chromanoma",
   "version": "0.0.0",
+  "engines":{
+	  "node": "6.4.x"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -26,12 +29,9 @@
     "@fortawesome/free-solid-svg-icons": "^5.4.1",
     "@types/color": "^3.0.0",
     "add": "^2.0.6",
-    "azure": "^2.3.1-preview",
     "color": "^3.1.0",
-    "color-name-list": "^3.52.1",
     "core-js": "^2.5.4",
     "kuduscript": "^1.0.17",
-    "nearest-color": "^0.4.2",
     "rxjs": "~6.2.0",
     "yarn": "^1.10.1",
     "zone.js": "~0.8.26"
