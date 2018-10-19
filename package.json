@@ -6,11 +6,11 @@
   },
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build --prod",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
+    "start": "npm run ng serve",
+    "build": "npm run ng build --prod",
+    "test": "npm run ng test",
+    "lint": "npm run ng lint",
+    "e2e": "npm run ng e2e",
     "postinstall": "npm run build"
   },
   "private": true,
