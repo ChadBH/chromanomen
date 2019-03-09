@@ -8,34 +8,47 @@ export class Choice{
   public isWrong: boolean;
   public isSelected: boolean;
   public icon: string;
+  public color: Color;
 
   public constructor(obj: any){
     this.hex = obj.hex;
     this.name = obj.name;
-    this.btnColor = "#FFFFFF";
-    this.textColor= "#000000"
+    this.btnColor = "#FFF";
+    this.textColor= "#000"
+    this.color = Color(this.hex);
   }
 
 select(){
     this.isSelected = true;
     this.btnColor = this.hex;
-    var color = Color(this.hex);
-    if(color.isDark()){
-      //this.textColor = "#FFFFFF";
-      this.textColor = color.negate().lighten(.5).hex();
+    if(this.color.isDark()){
+      this.textColor = this.color.negate().lighten(.5).hex();
     }else{
-      //this.textColor = "#000000";
-      this.textColor = color.negate().darken(.5).hex();
+      this.textColor = this.color.negate().darken(.5).hex();
     }
 }
 
-  wrong(){
-    this.select();
-    this.isWrong = true;
-    this.icon = "times";
+mouseenter(){
+  if(!this.isSelected){
+    this.btnColor = "#DDD";
   }
-  right(){
-    this.select();
-    this.icon = "check";
+}
+
+mouseleave(){
+  if(!this.isSelected){
+    this.btnColor = "#FFF";
   }
+}
+
+wrong(){
+  this.select();
+  this.isWrong = true;
+  this.icon = "times";
+}
+
+right(){
+  this.select();
+  this.icon = "check";
+}
+
 }

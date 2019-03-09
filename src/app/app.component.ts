@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import {Data} from "../models/data";
 import {Choice} from "../models/choice";
-import * as Color from 'color';
 import {faCoffee} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -33,9 +32,6 @@ export class AppComponent{
     var choice = Math.floor(Math.random() * this.choices);
     this.answer = this.colors[choice];
     this.correct = false;
-    var test = Color(this.answer.hex);
-    console.log(test);
-    //this.bgColor = Color(this.answer.hex).lighten(0.5)
   }
 
   checkColor(color: Choice){

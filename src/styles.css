@@ -23,7 +23,7 @@ div.flex1{
 button{
   width: 100%;
   font-size: 1.5em;
-  padding: 5px;
+  padding: 15px;
   border-radius: 5px;
   --switch: calc((var(--light) - var(--threshold)) * -100%);
   color: hsl(0, 0%, var(--switch));
