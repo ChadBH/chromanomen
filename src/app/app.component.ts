@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import {Data} from "../models/data";
 import {Choice} from "../models/choice";
+import {Score} from "../models/score";
 import {faCoffee} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -17,6 +18,7 @@ export class AppComponent{
   public data: Data;
   public choices: number;
   public bgColor: string;
+  public score: Score ;
 
   faCoffee = faCoffee;
 
@@ -24,6 +26,7 @@ export class AppComponent{
     //todo: get from url
     this.choices = 4;
     this.data = new Data();
+    this.score = new Score(0);
     this.next();
   }
 
@@ -38,11 +41,13 @@ export class AppComponent{
     if(color.hex === this.answer.hex){
       color.right();
       this.correct = true;
+      this.score.right();
       setTimeout(() => {
         this.next();
       }, 2000);
     }else{
       color.wrong();
+      this.score.wrong();
       this.correct = false;
     }
   }
