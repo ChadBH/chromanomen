@@ -6,8 +6,7 @@
     <button
       (click)="checkColor(color)"
       [ngStyle]="{'background-color': color.btnColor, 'color': color.textColor}"
-      [disabled] = "color.isSelected || correct"
-      >
+      [disabled] = "color.isSelected || correct" >
       {{color.name}}
       <fa-icon *ngIf = "color.isSelected" [icon] = "['fas', color.icon]"></fa-icon>
     </button>
